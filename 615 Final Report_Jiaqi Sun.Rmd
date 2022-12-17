@@ -1,0 +1,488 @@
+---
+title: "615 Final Report_Jiaqi Sun"
+author: "Jiaqi Sun"
+date: "2022-12-04"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(magrittr)
+library(dplyr)
+```
+
+# Abstract
+
+MBTA is The Massachusetts Bay Transportation Authority is the public agency responsible for operating most public transportation services in Greater Boston, Massachusetts. When we take public Transportation tools in Boston, we normally use Google Map to check the time cost and compared different route and choose the one meet their needs. But -- can we really trust the google map? Are these estimated time cost reliable? That is why in this report I am going to enroll MBTA data (consisting of the historical record of MBTA transit services) and see Which service should riders use -- Google or MBTA?
+
+# Methods
+
+## Data Processing
+
+```{r echo=FALSE, message=FALSE}
+by_month <- read_csv("https://cdn.mbta.com/archive/archived_feeds.txt")
+```
+
+```{r warning =FALSE, echo=FALSE, message=FALSE}
+#2022 Oct13-18
+stop_time <- read_delim("stop_times_10.txt", ",")
+stop <- read_delim("stops_10.txt", ",")
+trips <- read_delim("trips_10.txt", ",")
+calendar1 <- read_delim("calendar_attributes_10.txt", ",")
+calendar2 <- read_delim("calendar_dates_10.txt", ",")
+
+stop_time_Oct <- stop_time %>% inner_join(stop, by = "stop_id") %>% dplyr:::select(trip_id, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Oct <- stop_time_Oct %>% inner_join(trips, by = "trip_id") %>% dplyr:::select(trip_id, service_id, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Oct <- stop_time_Oct %>% inner_join(calendar1, by = "service_id") %>% dplyr:::select(trip_id, service_id, service_schedule_type, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Oct <- stop_time_Oct %>% inner_join(calendar2, by = "service_id") %>% dplyr:::select(trip_id, service_id, date, service_schedule_type, holiday_name, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+Oct <- c("20221013", "20221014", "20221015", "20221016", "20221017", "20221018")
+stop_time_Oct <- stop_time_Oct %>% filter(date %in% Oct)
+
+#2022 Sep16-21
+stop_time <- read_delim("stop_times_9.txt", ",")
+stop <- read_delim("stops_9.txt", ",")
+trips <- read_delim("trips_9.txt", ",")
+calendar1 <- read_delim("calendar_attributes_9.txt", ",")
+calendar2 <- read_delim("calendar_dates_9.txt", ",")
+
+stop_time_Sep <- stop_time %>% inner_join(stop, by = "stop_id") %>% dplyr:::select(trip_id, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Sep <- stop_time_Sep %>% inner_join(trips, by = "trip_id") %>% dplyr:::select(trip_id, service_id, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Sep <- stop_time_Sep %>% inner_join(calendar1, by = "service_id") %>% dplyr:::select(trip_id, service_id, service_schedule_type, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Sep <- stop_time_Sep %>% inner_join(calendar2, by = "service_id") %>% dplyr:::select(trip_id, service_id, date, service_schedule_type, holiday_name, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+Sep <- c("20220916", "20220917", "20220918", "20220919", "20220920", "20220921")
+stop_time_Sep <- stop_time_Sep %>% filter(date %in% Sep)
+
+
+#2022 Aug03-07
+stop_time <- read_delim("stop_times_8.txt", ",")
+stop <- read_delim("stops_8.txt", ",")
+trips <- read_delim("trips_8.txt", ",")
+calendar1 <- read_delim("calendar_attributes_8.txt", ",")
+calendar2 <- read_delim("calendar_dates_8.txt", ",")
+
+stop_time_Aug <- stop_time %>% inner_join(stop, by = "stop_id") %>% dplyr:::select(trip_id, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Aug  <- stop_time_Aug  %>% inner_join(trips, by = "trip_id") %>% dplyr:::select(trip_id, service_id, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Aug  <- stop_time_Aug  %>% inner_join(calendar1, by = "service_id") %>% dplyr:::select(trip_id, service_id, service_schedule_type, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Aug  <- stop_time_Aug %>% inner_join(calendar2, by = "service_id") %>% dplyr:::select(trip_id, service_id, date, service_schedule_type, holiday_name, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+Aug <- c("20220803", "20220804", "20220805", "20220806", "20220807")
+stop_time_Aug <- stop_time_Aug %>% filter(date %in% Aug)
+
+#2022 Jul06-11
+stop_time <- read_delim("stop_times_7.txt", ",")
+stop <- read_delim("stops_7.txt", ",")
+trips <- read_delim("trips_7.txt", ",")
+calendar1 <- read_delim("calendar_attributes_7.txt", ",")
+calendar2 <- read_delim("calendar_dates_7.txt", ",")
+
+stop_time_Jul <- stop_time %>% inner_join(stop, by = "stop_id") %>% dplyr:::select(trip_id, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Jul  <- stop_time_Jul  %>% inner_join(trips, by = "trip_id") %>% dplyr:::select(trip_id, service_id, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Jul  <- stop_time_Jul  %>% inner_join(calendar1, by = "service_id") %>% dplyr:::select(trip_id, service_id, service_schedule_type, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Jul  <- stop_time_Jul %>% inner_join(calendar2, by = "service_id") %>% dplyr:::select(trip_id, service_id, date, service_schedule_type, holiday_name, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+Jul <- c("20220706", "20220707", "20220708", "20220709", "20220710", "20220711")
+stop_time_Jul <- stop_time_Jul %>% filter(date %in% Jul)
+
+#2022 Jun10-15
+stop_time <- read_delim("stop_times_6.txt", ",")
+stop <- read_delim("stops_6.txt", ",")
+trips <- read_delim("trips_6.txt", ",")
+calendar1 <- read_delim("calendar_attributes_6.txt", ",")
+calendar2 <- read_delim("calendar_dates_6.txt", ",")
+
+stop_time_Jun <- stop_time %>% inner_join(stop, by = "stop_id") %>% dplyr:::select(trip_id, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Jun  <- stop_time_Jun  %>% inner_join(trips, by = "trip_id") %>% dplyr:::select(trip_id, service_id, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Jun  <- stop_time_Jun  %>% inner_join(calendar1, by = "service_id") %>% dplyr:::select(trip_id, service_id, service_schedule_type, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Jun  <- stop_time_Jun %>% inner_join(calendar2, by = "service_id") %>% dplyr:::select(trip_id, service_id, date, service_schedule_type, holiday_name, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+Jun <- c("20220610", "20220611", "20220612", "20220613", "20220614", "20220615")
+stop_time_Jun <- stop_time_Jun %>% filter(date %in% Jun)
+
+#2022 May14-21
+stop_time <- read_delim("stop_times_5.txt", ",")
+stop <- read_delim("stops_5.txt", ",")
+trips <- read_delim("trips_5.txt", ",")
+calendar1 <- read_delim("calendar_attributes_5.txt", ",")
+calendar2 <- read_delim("calendar_dates_5.txt", ",")
+
+stop_time_May <- stop_time %>% inner_join(stop, by = "stop_id") %>% dplyr:::select(trip_id, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_May  <- stop_time_May  %>% inner_join(trips, by = "trip_id") %>% dplyr:::select(trip_id, service_id, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_May  <- stop_time_May  %>% inner_join(calendar1, by = "service_id") %>% dplyr:::select(trip_id, service_id, service_schedule_type, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_May  <- stop_time_May %>% inner_join(calendar2, by = "service_id") %>% dplyr:::select(trip_id, service_id, date, service_schedule_type, holiday_name, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+May <- c("20220514", "20220515", "20220516", "20220517", "20220518", "20220519", "20220520", "20220521")
+stop_time_May <- stop_time_May %>% filter(date %in% May)
+
+#2022 Apr22-25
+stop_time <- read_delim("stop_times_4.txt", ",")
+stop <- read_delim("stops_4.txt", ",")
+trips <- read_delim("trips_4.txt", ",")
+calendar1 <- read_delim("calendar_attributes_4.txt", ",")
+calendar2 <- read_delim("calendar_dates_4.txt", ",")
+
+stop_time_Apr <- stop_time %>% inner_join(stop, by = "stop_id") %>% dplyr:::select(trip_id, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Apr  <- stop_time_Apr  %>% inner_join(trips, by = "trip_id") %>% dplyr:::select(trip_id, service_id, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Apr  <- stop_time_Apr  %>% inner_join(calendar1, by = "service_id") %>% dplyr:::select(trip_id, service_id, service_schedule_type, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Apr  <- stop_time_Apr %>% inner_join(calendar2, by = "service_id") %>% dplyr:::select(trip_id, service_id, date, service_schedule_type, holiday_name, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+Apr <- c("20220422", "20220423", "20220424", "20220425")
+stop_time_Apr <- stop_time_Apr %>% filter(date %in% Apr)
+
+#2022 Mar04-08
+stop_time <- read_delim("stop_times_3.txt", ",")
+stop <- read_delim("stops_3.txt", ",")
+trips <- read_delim("trips_3.txt", ",")
+calendar1 <- read_delim("calendar_attributes_3.txt", ",")
+calendar2 <- read_delim("calendar_dates_3.txt", ",")
+
+stop_time_Mar <- stop_time %>% inner_join(stop, by = "stop_id") %>% dplyr:::select(trip_id, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Mar  <- stop_time_Mar  %>% inner_join(trips, by = "trip_id") %>% dplyr:::select(trip_id, service_id, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Mar  <- stop_time_Mar  %>% inner_join(calendar1, by = "service_id") %>% dplyr:::select(trip_id, service_id, service_schedule_type, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Mar  <- stop_time_Mar %>% inner_join(calendar2, by = "service_id") %>% dplyr:::select(trip_id, service_id, date, service_schedule_type, holiday_name, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+Mar <- c("20220304", "20220305", "20220306", "20220307", "20220308")
+stop_time_Mar <- stop_time_Mar %>% filter(date %in% Mar)
+
+#2022 Feb17-22
+stop_time <- read_delim("stop_times_2.txt", ",")
+stop <- read_delim("stops_2.txt", ",")
+trips <- read_delim("trips_2.txt", ",")
+calendar1 <- read_delim("calendar_attributes_2.txt", ",")
+calendar2 <- read_delim("calendar_dates_2.txt", ",")
+
+stop_time_Feb <- stop_time %>% inner_join(stop, by = "stop_id") %>% dplyr:::select(trip_id, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Feb  <- stop_time_Feb  %>% inner_join(trips, by = "trip_id") %>% dplyr:::select(trip_id, service_id, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Feb  <- stop_time_Feb  %>% inner_join(calendar1, by = "service_id") %>% dplyr:::select(trip_id, service_id, service_schedule_type, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Feb  <- stop_time_Feb %>% inner_join(calendar2, by = "service_id") %>% dplyr:::select(trip_id, service_id, date, service_schedule_type, holiday_name, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+Feb <- c("20220217", "20220218", "20220219", "20220220", "20220221", "20220222")
+stop_time_Feb <- stop_time_Feb %>% filter(date %in% Feb)
+
+#2022 Jan13-19
+stop_time <- read_delim("stop_times_1.txt", ",")
+stop <- read_delim("stops_1.txt", ",")
+trips <- read_delim("trips_1.txt", ",")
+calendar1 <- read_delim("calendar_attributes_1.txt", ",")
+calendar2 <- read_delim("calendar_dates_1.txt", ",")
+
+stop_time_Jan <- stop_time %>% inner_join(stop, by = "stop_id") %>% dplyr:::select(trip_id, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Jan  <- stop_time_Jan  %>% inner_join(trips, by = "trip_id") %>% dplyr:::select(trip_id, service_id, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Jan  <- stop_time_Jan  %>% inner_join(calendar1, by = "service_id") %>% dplyr:::select(trip_id, service_id, service_schedule_type, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Jan  <- stop_time_Jan %>% inner_join(calendar2, by = "service_id") %>% dplyr:::select(trip_id, service_id, date, service_schedule_type, holiday_name, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+Jan <- c("20220113", "20220114", "20220115", "20220116", "20220117", "20220118", "202201119")
+stop_time_Jan <- stop_time_Jan %>% filter(date %in% Jan)
+
+#2021 Dec22-27
+stop_time <- read_delim("stop_times_12.txt", ",")
+stop <- read_delim("stops_12.txt", ",")
+trips <- read_delim("trips_12.txt", ",")
+calendar1 <- read_delim("calendar_attributes_12.txt", ",")
+calendar2 <- read_delim("calendar_dates_12.txt", ",")
+
+stop_time_Dec <- stop_time %>% inner_join(stop, by = "stop_id") %>% dplyr:::select(trip_id, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Dec  <- stop_time_Dec  %>% inner_join(trips, by = "trip_id") %>% dplyr:::select(trip_id, service_id, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Dec  <- stop_time_Dec  %>% inner_join(calendar1, by = "service_id") %>% dplyr:::select(trip_id, service_id, service_schedule_type, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Dec  <- stop_time_Dec %>% inner_join(calendar2, by = "service_id") %>% dplyr:::select(trip_id, service_id, date, service_schedule_type, holiday_name, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+Dec <- c("20211222", "20211223", "20211224", "20211225", "20211226", "20211227")
+stop_time_Dec <- stop_time_Dec %>% filter(date %in% Dec)
+
+#2021 Nov16-21
+stop_time <- read_delim("stop_times_11.txt", ",")
+stop <- read_delim("stops_11.txt", ",")
+trips <- read_delim("trips_11.txt", ",")
+calendar1 <- read_delim("calendar_attributes_11.txt", ",")
+calendar2 <- read_delim("calendar_dates_11.txt", ",")
+routes_patterns <- read_delim("route_patterns_11.txt", ",")
+
+stop_time_Nov <- stop_time %>% inner_join(stop, by = "stop_id") %>% dplyr:::select(trip_id, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Nov  <- stop_time_Nov  %>% inner_join(trips, by = "trip_id") %>% dplyr:::select(trip_id, service_id, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Nov  <- stop_time_Nov  %>% inner_join(calendar1, by = "service_id") %>% dplyr:::select(trip_id, service_id, service_schedule_type, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+stop_time_Nov  <- stop_time_Nov %>% inner_join(calendar2, by = "service_id") %>% dplyr:::select(trip_id, service_id, date, service_schedule_type, holiday_name, arrival_time, departure_time, stop_id, stop_name, stop_headsign, stop_desc, stop_lat, stop_lon, zone_id)
+
+Nov <- c("20211116", "20211117", "20211118", "20211119", "20211120", "20211121")
+stop_time_Nov <- stop_time_Nov %>% filter(date %in% Nov)
+
+
+#Combine several datasets to get full information
+data <- rbind(stop_time_Oct, stop_time_Sep, stop_time_Aug, stop_time_Jul, stop_time_Jun, stop_time_May, stop_time_Apr, stop_time_Mar, stop_time_Feb, stop_time_Jan, stop_time_Dec, stop_time_Nov)
+
+
+```
+
+After cleaning the data, we have a data frame that contains MBTA stop data which includes one random week from each month in the past year: Nov 2021 to Oct 2022. The datasets I used to generate this dataframe are 5 different txt files: stop_time, time, calendar_attributes, calendar_dates and trips. I will attach the dictionary of terms in this final dataframe:
+
+|     column names      | explanation                                   |
+|:---------------------:|:----------------------------------------------|
+| service_schedule_type | Weekday, Sunday, Saturday                     |
+|        trip_id        | numerical code assigned to each trip or route |
+|     time_spending     | time spend from origin to destination         |
+|    arrival_time.x     | time when you start from the origin           |
+|    arrival_time.y     | time when you arrive the destination          |
+|      time_period      | period of a day                               |
+|     vehicle_type      | Red Line, Blue Line, Orange Line, Green Line  |
+
+\newpage
+
+# Exploratory Data Analysis
+
+## Does Time of the Day Influence Travel Time?
+
+I randomly picked the start station as "Heath Street" and stop station as "northeastern University", divided a day into 6 time periods: Early morning : 5 to 8 am, Late morning: 11 am to 12pm, Early afternoon 1 to 3pm, Late afternoon: 4 to 5pm, Early evening: 5 to 7 pm, Night: 9 pm to 4 am. We want to see how does the different time periods influence the travel time.
+
+```{r echo=FALSE, fig.height=3.6, fig.width=7,fig.cap="relationship between time_spending and time period of the day"}
+# Explore different time section of the day:
+
+#set the start and end station
+start <- "Heath Street"
+end <- "Northeastern University"
+
+stop_time_Nov %>% 
+  filter(stop_name == start) %>% 
+  arrange(trip_id) -> Nov_start
+
+Nov_start[3:16, ] ->Nov_start_em
+Nov_start[42:49, ] ->Nov_start_lm
+Nov_start[58:73, ] ->Nov_start_ea
+Nov_start[82:90, ] ->Nov_start_la
+Nov_start[91:106, ] ->Nov_start_ee
+Nov_start[237:265, ] ->Nov_start_n
+
+Nov_start_em$trip_id -> trip_id_nov_em
+Nov_start_lm$trip_id -> trip_id_nov_lm
+Nov_start_ea$trip_id -> trip_id_nov_ea
+Nov_start_la$trip_id -> trip_id_nov_la
+Nov_start_ee$trip_id -> trip_id_nov_ee
+Nov_start_n$trip_id -> trip_id_nov_n
+
+stop_time_Nov %>% 
+  filter(stop_name == end) %>% 
+  arrange(trip_id) -> Nov_end
+
+Nov_end %>% 
+  filter(trip_id  %in%  trip_id_nov_em) -> Nov_end_em
+
+Nov_end %>% 
+  filter(trip_id  %in%  trip_id_nov_lm) -> Nov_end_lm
+
+Nov_end %>% 
+  filter(trip_id  %in%  trip_id_nov_ea) -> Nov_end_ea
+
+Nov_end %>% 
+  filter(trip_id  %in%  trip_id_nov_la) -> Nov_end_la
+
+Nov_end %>% 
+  filter(trip_id  %in%  trip_id_nov_ee) -> Nov_end_ee
+
+Nov_end %>% 
+  filter(trip_id  %in%  trip_id_nov_n) -> Nov_end_n
+
+Nov_end_em %>% right_join(Nov_start_em, by = "trip_id") -> Nov_em
+Nov_end_lm %>% right_join(Nov_start_lm, by = "trip_id") -> Nov_lm
+Nov_end_ea %>% right_join(Nov_start_ea, by = "trip_id") -> Nov_ea
+Nov_end_la %>% right_join(Nov_start_la, by = "trip_id") -> Nov_la
+Nov_end_ee %>% right_join(Nov_start_ee, by = "trip_id") -> Nov_ee
+Nov_end_n %>% right_join(Nov_start_n, by = "trip_id") -> Nov_n
+
+Nov_em %>% 
+  dplyr::select(-7, -15, -16, -17, -18, -20) %>% 
+  mutate(time_spending = arrival_time.x - arrival_time.y) %>% 
+  mutate(time_period = "early_mo") -> Nov_em
+
+Nov_lm %>% 
+  dplyr::select(-7, -15, -16, -17, -18, -20) %>% 
+  mutate(time_spending = arrival_time.x - arrival_time.y) %>% 
+  mutate(time_period = "late_mo") -> Nov_lm
+
+Nov_ea %>% 
+  dplyr::select(-7, -15, -16, -17, -18, -20) %>% 
+  mutate(time_spending = arrival_time.x - arrival_time.y) %>% 
+  mutate(time_period = "early_af") -> Nov_ea
+
+Nov_la %>% 
+  dplyr::select(-7, -15, -16, -17, -18, -20) %>% 
+  mutate(time_spending = arrival_time.x - arrival_time.y) %>% 
+  mutate(time_period = "late_af") -> Nov_la
+
+Nov_ee %>% 
+  dplyr::select(-7, -15, -16, -17, -18, -20) %>% 
+  mutate(time_spending = arrival_time.x - arrival_time.y) %>% 
+  mutate(time_period =  "early_eve") -> Nov_ee
+
+Nov_n %>% 
+  dplyr::select(-7, -15, -16, -17, -18, -20) %>% 
+  mutate(time_spending = arrival_time.x - arrival_time.y) %>% 
+  mutate(time_period = "night") -> Nov_n
+
+Nov_time_period <- rbind(Nov_em, Nov_lm, Nov_ea, Nov_la, Nov_ee, Nov_n)
+Nov_time_period %>% 
+  group_by(time_period) %>% 
+  mutate(avg_time = mean(time_spending)) %>% 
+  select(time_spending, avg_time) %>% 
+  unique()->Nov_time_period_graph
+
+ggplot(data = Nov_time_period_graph) + 
+  aes(x = time_period, y = avg_time) + 
+  geom_point(aes(color = time_period), size = 1) + 
+  scale_x_discrete(limits = c("early_mo", "late_mo", "early_af", "late_af", "early_eve", "night")) +
+  labs(title = "(b) Time Spending vs Time Period", x = "Time period", y = "Time Spending") +
+  ylim(700,1100)
+
+```
+
+We used seconds as travel time units here.
+
+From the above graph, we can see the travel time during the early afternoon period (1-3pm) is the longest while in the other time period do not differ to much in travel time.
+
+\newpage
+
+## Does service_schedule type influence travel time?
+
+I randomly picked the start station as "Heath Street" and stop station as "northeastern University", divided a week into 3 time schedule type: Weekday(Monday to Friday), Saturday and Sunday. I want to see how does the different schedule types influence the travel time.
+
+```{r echo=FALSE, message = FALSE, warning=FALSE, fig.height=3.6, fig.width=7, fig.cap="relationship between service_schedule type and travel time"}
+start <- "Heath Street"
+end <- "Northeastern University"
+
+data %>% 
+  filter(stop_name == start) %>% 
+  arrange(trip_id,date) -> start
+
+data %>% 
+  filter(stop_name == end) %>% 
+  arrange(trip_id,date) -> end
+
+start %>% right_join(end, by = "trip_id") -> start_end
+
+start_end %>% 
+  dplyr::select(-7, -15, -16, -17, -18, -20) %>% 
+  mutate(time_spending = abs(arrival_time.y - arrival_time.x)) -> data_start_end
+
+ggplot(data = data_start_end) +
+  aes(x = service_schedule_type.x, y = as.numeric(time_spending)) +
+  geom_point(aes(color =  service_schedule_type.x), size = 1) +
+  scale_x_discrete(limits = c("Weekday", "Saturday", "Sunday")) +
+  labs(title = "(b) Time Spending vs schedule type", x = "schedule type", y = "Time Spending")
+
+```
+
+From the graph above, we can see that the travel time of Weekdays fluctuate more and tend to take more time relative to Saturday and Sunday. While compared to Saturday, sometimes Sunday takes less time.
+
+\newpage
+## Does Holidays influence travel time?
+
+I randomly picked the start station as "Heath Street" and stop station as "northeastern University", I want to see how do the different holidays influence the travel time compared to normal days.
+
+```{r echo=FALSE, fig.height=4, fig.width=7, fig.cap="number of routes in MBTA"}
+ggplot(data = data_start_end) +
+  aes(x = holiday_name.x, y = as.numeric(time_spending)) +
+  geom_point(aes(color =  holiday_name.x), size = 1) + coord_flip() +
+  labs(title = "(b) Time Spending vs holiday", x = "holiday", y = "Time Spending")
+```
+
+From the graph above, we can see that compared to normal days, the travel time on holiday is less, especially for Christmas Day, when everyone stays at home and celebrate holiday with family.
+
+\newpage
+## Number of routes in MBTA?
+
+From the data given. I saw there are many different kinds of holidays and I am wondering how often do MBTA run these respectively? Which one of them do people need most?
+
+```{r echo=FALSE, fig.height=4, fig.width=7, fig.cap="number of routes in MBTA"}
+CR <- c("CR-zone-1A", "CR-zone-1", "CR-zone-2", "CR-zone-3", "CR-zone-4", "CR-zone-5", "CR-zone-6", "CR-zone-7", "CR-zone-8", "CR-zone-9", "CR-zone-10" )
+SL <- c("SLWaterfrontNonLogan", "SL1-Logan")
+
+data_routes <- data %>%
+  mutate(route_type = case_when(zone_id %in% CR ~ "Commuter Rail",
+                                zone_id %in% SL ~ "Silver Line",
+                                zone_id == "ExpressBus-Downtown" ~ "ExpressBus",
+                                 TRUE ~ zone_id))
+
+data_routes %>% 
+  count(route_type) -> routes_graph
+
+# Uniform color
+ggplot(data = routes_graph) + geom_bar(aes(x=route_type, y = log(n)), stat = "identity", fill=rgb(0.2,0.4,0.6,0.6),width = 0.5) +
+  labs(title = "Number of routes in MBTA", x = "route type", y = "number") + theme(legend.position = "none")
+```
+
+I take log of the number to help make the graph better. It is clearly that localbus are times more than any of the other route types.
+
+\newpage
+## Accessibility of MBTA?
+
+The Massachusetts Bay Transportation Authority (MBTA) system is mostly but not fully accessible. Like most American mass transit systems, much of the MBTA subway and commuter rail were built before wheelchair access became a requirement under the Americans with Disabilities Act of 1990.
+
+Here I am wondering how do the wheelchair length differ for different kinds of MBTA route types?
+
+```{r echo=FALSE, warnings = FALSE, message=FALSE}
+
+pathways_11 <- read_delim("pathways_11.txt", ",")
+pathways_11 <- pathways_11 %>%
+  mutate(pathway_type = case_when(str_detect(pathway_name, "Commuter Rail") ~ "Commuter Rail",
+                            str_detect(pathway_name, "Red Line") ~ "Red Line",
+                            str_detect(pathway_name, "Orange Line") ~ "Orange Line",
+                            str_detect(pathway_name, "Busway") ~ "ExpressBus",
+                            str_detect(pathway_name, "busway") ~ "ExpressBus",
+                            str_detect(pathway_name, "Green Line") ~ "Green Line",
+                            str_detect(pathway_name, "Blue Line") ~ "Blue Line",
+                            str_detect(pathway_name, "Silver Line") ~ "Silver Line",
+                            TRUE ~ "others"))
+```
+
+```{r echo=FALSE, warning=FALSE, fig.height=4, fig.width=7, fig.cap="Accessibility of MBTA"}
+ggplot(data = pathways_11) + 
+  aes(x = wheelchair_length, y = pathway_type ) + 
+  geom_boxplot(aes(color = pathway_type), size = 0.6) 
+```
+
+From the graph above, we can see that commuter Rail is the most wheelchair_friendly route type, with blue line and silver line on the opposite side.
+
+# conclusion
+
+After exploring the data, we noticed that the travel time of different type of MBTA differs, and different schedule day, holiday and time period of the day also influences that. However, we need more data(we only grab one week from each month here) to make more meaningful solutions and we are not sure that whether MBTA data should be trusted (from the data, the travel time rarely differs), but in the real life, we all waited for MBTA for a long time.
+
+The schedule time and the google estimated time give us points of comparison, and this analysis give us an indication
+for the later experiment with the interface. 
+
